@@ -19,6 +19,20 @@ class ChatApiException implements Exception {
   String toString() => 'ChatApiException: $message (status: $statusCode)';
 }
 
+/// 스트리밍 중지용 토큰. cancel() 호출 시 진행 중인 스트림 구독을 끊는다.
+class StreamCancelToken {
+  bool _cancelled = false;
+  void Function()? _onCancel;
+
+  bool get isCancelled => _cancelled;
+
+  void cancel() {
+    if (_cancelled) return;
+    _cancelled = true;
+    _onCancel?.call();
+  }
+}
+
 String _parseErrorBody(String body, int statusCode) {
   if (body.isEmpty) return 'Request failed ($statusCode)';
   try {
@@ -33,17 +47,20 @@ String _parseErrorBody(String body, int statusCode) {
 class ChatApiClient {
   ChatApiClient({
     required String baseUrl,
+    String? resourceCenterUrl,
     String? sessionToken,
     String? accessToken,
     http.Client? client,
-  })  : _baseUrl = baseUrl.endsWith('/')
-            ? baseUrl.substring(0, baseUrl.length - 1)
-            : baseUrl,
-        _sessionToken = sessionToken,
-        _accessToken = accessToken,
-        _client = client ?? http.Client();
+  }) : _baseUrl = baseUrl.endsWith('/')
+           ? baseUrl.substring(0, baseUrl.length - 1)
+           : baseUrl,
+       _resourceCenterUrl = resourceCenterUrl,
+       _sessionToken = sessionToken,
+       _accessToken = accessToken,
+       _client = client ?? http.Client();
 
   final String _baseUrl;
+  final String? _resourceCenterUrl;
   String? _sessionToken;
   final String? _accessToken;
   final http.Client _client;
@@ -54,10 +71,10 @@ class ChatApiClient {
 
   String? get sessionToken => _sessionToken;
 
-  Map<String, String> get _headers {
-    final h = <String, String>{
-      'Content-Type': 'application/json',
-    };
+  Map<String, String> _headers({bool json = true}) {
+    final h = <String, String>{};
+    // 본문 없이 Content-Type: application/json을 보내면 Fastify가 400을 반환함
+    if (json) h['Content-Type'] = 'application/json';
     final token = _sessionToken ?? _accessToken;
     if (token != null && token.isNotEmpty) {
       h['Authorization'] = 'Bearer $token';
@@ -65,14 +82,18 @@ class ChatApiClient {
     return h;
   }
 
+  Uri _uri(String path, [Map<String, String>? query]) {
+    final uri = Uri.parse('$_baseUrl/$path');
+    return query == null ? uri : uri.replace(queryParameters: query);
+  }
+
   /// 세션 생성 (앱: clientType=app, appId)
   Future<CreateSessionResponse> createSession(
     CreateSessionRequest request,
   ) async {
-    final url = Uri.parse('$_baseUrl/${ChatApiEndpoints.createSession}');
     final response = await _client.post(
-      url,
-      headers: _headers,
+      _uri(ChatApiEndpoints.createSession),
+      headers: _headers(),
       body: jsonEncode(request.toJson()),
     );
 
@@ -87,16 +108,17 @@ class ChatApiClient {
     return CreateSessionResponse.fromJson(data);
   }
 
-  /// 대화 내역 조회 (페이징)
+  /// 대화 내역 조회
   Future<GetMessagesResponse> getMessages({
     String? cursor,
     int limit = 20,
   }) async {
     final query = <String, String>{'limit': limit.toString()};
     if (cursor != null && cursor.isNotEmpty) query['cursor'] = cursor;
-    final url = Uri.parse('$_baseUrl/${ChatApiEndpoints.getMessages}')
-        .replace(queryParameters: query);
-    final response = await _client.get(url, headers: _headers);
+    final response = await _client.get(
+      _uri(ChatApiEndpoints.getMessages, query),
+      headers: _headers(json: false),
+    );
 
     if (response.statusCode != 200) {
       throw ChatApiException(
@@ -109,142 +131,166 @@ class ChatApiClient {
     return GetMessagesResponse.fromJson(data);
   }
 
-  /// 메시지 저장 (선택)
-  Future<ChatMessageDto> postMessage(SaveMessageRequest request) async {
-    final url = Uri.parse('$_baseUrl/${ChatApiEndpoints.postMessage}');
-    final response = await _client.post(
-      url,
-      headers: _headers,
-      body: jsonEncode(request.toJson()),
-    );
-
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      throw ChatApiException(
-        _parseErrorBody(response.body, response.statusCode),
-        statusCode: response.statusCode,
-      );
-    }
-
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return ChatMessageDto.fromJson(data);
+  /// 가장 최근에 저장된 assistant 메시지 조회.
+  /// 스트리밍 응답에는 메시지 ID가 없으므로, 스트림 완료 직후 이 API로
+  /// 서버 메시지 ID를 얻어 피드백/재생성에 사용한다.
+  Future<ChatMessageDto?> getLatestAssistantMessage() async {
+    final res = await getMessages(limit: 1);
+    final latest = res.messages.isNotEmpty ? res.messages.first : null;
+    return latest != null && latest.role == 'assistant' ? latest : null;
   }
 
-  /// 리소스 조회 (바이너리)
-  Future<List<int>> getResource(String path) async {
-    final encoded = Uri.encodeComponent(path);
-    final url =
-        Uri.parse('$_baseUrl/${ChatApiEndpoints.resourcesPrefix}$encoded');
-    final response = await _client.get(url, headers: _headers);
+  /// assistant 답변 피드백 등록/변경
+  Future<void> submitFeedback(String messageId, FeedbackRating rating) async {
+    final response = await _client.put(
+      _uri(ChatApiEndpoints.feedback(messageId)),
+      headers: _headers(),
+      body: jsonEncode({'rating': rating.apiValue}),
+    );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw ChatApiException(
         _parseErrorBody(response.body, response.statusCode),
         statusCode: response.statusCode,
       );
     }
-
-    return response.bodyBytes;
   }
 
   /// 채팅 메시지 전송 (스트리밍)
   Future<SendChatResponse> sendChatMessage(
     SendChatRequest request, {
-    void Function(String text, bool isComplete)? onChunk,
-    Future<void> Function()? cancelSignal,
+    void Function(String text)? onChunk,
+    StreamCancelToken? cancelToken,
+  }) {
+    return _streamChatResponse(
+      ChatApiEndpoints.sendChatStream,
+      body: jsonEncode(request.toJson()),
+      onChunk: onChunk,
+      cancelToken: cancelToken,
+    );
+  }
+
+  /// BAD 피드백 답변 1회 재생성 (스트리밍, 본문 없음)
+  Future<SendChatResponse> regenerateAnswer(
+    String messageId, {
+    void Function(String text)? onChunk,
+    StreamCancelToken? cancelToken,
+  }) {
+    return _streamChatResponse(
+      ChatApiEndpoints.regenerateStream(messageId),
+      body: null,
+      onChunk: onChunk,
+      cancelToken: cancelToken,
+    );
+  }
+
+  /// SSE 채팅 스트림 공통 처리 (웹 위젯의 streamWidgetChatResponse와 동일 규칙)
+  Future<SendChatResponse> _streamChatResponse(
+    String path, {
+    String? body,
+    void Function(String text)? onChunk,
+    StreamCancelToken? cancelToken,
   }) async {
-    final url = Uri.parse('$_baseUrl/${ChatApiEndpoints.sendChatStream}');
-    final req = http.Request('POST', url)
-      ..headers.addAll(_headers)
-      ..body = jsonEncode(request.toJson());
+    final req = http.Request('POST', _uri(path))
+      ..headers.addAll(_headers(json: body != null));
+    if (body != null) req.body = body;
 
     final streamedResponse = await _client.send(req);
 
     if (streamedResponse.statusCode != 200) {
-      final body = await streamedResponse.stream.bytesToString();
+      final errorBody = await streamedResponse.stream.bytesToString();
       throw ChatApiException(
-        _parseErrorBody(body, streamedResponse.statusCode),
+        _parseErrorBody(errorBody, streamedResponse.statusCode),
         statusCode: streamedResponse.statusCode,
       );
     }
 
     final completer = Completer<SendChatResponse>();
-    String fullText = '';
-    List<ChatSource> resources = [];
+    var fullText = '';
+    var resources = <RawResource>[];
 
-    final subscription = streamedResponse.stream
+    void completeWith() {
+      if (!completer.isCompleted) {
+        completer.complete(
+          SendChatResponse(
+            answer: fullText,
+            sources: resources
+                .map(
+                  (r) =>
+                      resolveSource(r, resourceCenterUrl: _resourceCenterUrl),
+                )
+                .toList(),
+          ),
+        );
+      }
+    }
+
+    void failWith(Object error, [StackTrace? st]) {
+      if (!completer.isCompleted) {
+        completer.completeError(error, st);
+      }
+    }
+
+    late final StreamSubscription<String> subscription;
+    subscription = streamedResponse.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(
-      (line) {
-        if (line.trim().isEmpty) return;
+          (line) {
+            if (!line.startsWith('data: ')) return;
+            final data = line.substring(6).trim();
 
-        if (line.startsWith('data: ')) {
-          final data = line.substring(6).trim();
-          if (data == '[DONE]') {
-            if (!completer.isCompleted) {
-              completer.complete(
-                SendChatResponse(answer: fullText, sources: resources),
-              );
-            }
-            return;
-          }
-
-          try {
-            final parsed = jsonDecode(data) as Map<String, dynamic>;
-
-            if (parsed['error'] != null) {
-              throw ChatApiException(parsed['error'] as String);
+            if (data == '[DONE]') {
+              completeWith();
+              subscription.cancel();
+              return;
             }
 
-            if (parsed['content'] != null) {
-              fullText += parsed['content'] as String;
-              onChunk?.call(fullText, false);
+            Map<String, dynamic> parsed;
+            try {
+              parsed = jsonDecode(data) as Map<String, dynamic>;
+            } catch (_) {
+              // 불완전한 JSON 청크는 무시 (웹 위젯과 동일)
+              return;
+            }
+
+            final error = parsed['error'];
+            if (error != null) {
+              failWith(ChatApiException(error.toString()));
+              subscription.cancel();
+              return;
+            }
+
+            final content = parsed['content'];
+            if (content is String) {
+              fullText += content;
+              onChunk?.call(fullText);
             }
 
             if (parsed['type'] == 'resources') {
               final raw = parsed['resources'] as List<dynamic>? ?? [];
-              resources = raw.map((r) {
-                final m = r as Map<String, dynamic>;
-                final path = m['path'] as String?;
-                final urlStr = m['url'] as String? ?? '';
-                final isImage = urlStr.toLowerCase().endsWith('.png') ||
-                    (m['formats'] as List<dynamic>?)
-                        ?.any((f) => f.toString().toLowerCase() == 'png') ==
-                        true;
-                return ChatSource(
-                  type: isImage ? 'image' : 'url',
-                  url: urlStr,
-                  title: path,
-                  path: path,
-                );
-              }).toList();
+              resources = raw
+                  .map((r) => RawResource.fromJson(r as Map<String, dynamic>))
+                  .toList();
             }
-          } catch (e) {
-            if (e is ChatApiException) rethrow;
-          }
-        }
-      },
-      onDone: () {
-        if (!completer.isCompleted) {
-          completer.complete(
-            SendChatResponse(answer: fullText, sources: resources),
-          );
-        }
-      },
-      onError: (e, st) {
-        if (!completer.isCompleted) {
-          completer.completeError(e, st);
-        }
-      },
-      cancelOnError: true,
-    );
+          },
+          onDone: completeWith,
+          onError: failWith,
+          cancelOnError: true,
+        );
 
-    if (cancelSignal != null) {
-      cancelSignal().then((_) => subscription.cancel());
+    cancelToken?._onCancel = () {
+      subscription.cancel();
+      failWith(StreamCancelledException());
+    };
+    if (cancelToken?.isCancelled ?? false) {
+      subscription.cancel();
+      failWith(StreamCancelledException());
     }
 
-    final result = await completer.future;
-    onChunk?.call(result.answer, true);
-    return result;
+    return completer.future;
   }
 }
+
+/// 사용자가 스트리밍을 중지했을 때 발생
+class StreamCancelledException implements Exception {}

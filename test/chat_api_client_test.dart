@@ -8,17 +8,14 @@ void main() {
     test('createSession returns session on success', () async {
       final client = ChatApiClient(
         baseUrl: 'https://api.example.com',
-        client: _MockClient((_) async => http.Response(
-          '{"sessionToken":"tok","expiresIn":3600}',
-          200,
-        )),
+        client: _MockClient(
+          (_) async =>
+              http.Response('{"sessionToken":"tok","expiresIn":3600}', 200),
+        ),
       );
 
       final response = await client.createSession(
-        const CreateSessionRequest(
-          widgetKey: 'wk',
-          appId: 'com.example.app',
-        ),
+        const CreateSessionRequest(widgetKey: 'wk', appId: 'com.example.app'),
       );
 
       expect(response.sessionToken, 'tok');
@@ -33,10 +30,7 @@ void main() {
 
       expect(
         () => client.createSession(
-          const CreateSessionRequest(
-            widgetKey: 'wk',
-            appId: 'com.example.app',
-          ),
+          const CreateSessionRequest(widgetKey: 'wk', appId: 'com.example.app'),
         ),
         throwsA(isA<ChatApiException>()),
       );

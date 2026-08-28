@@ -20,7 +20,8 @@ class SessionManager {
   Future<void> saveSession(String token, int expiresInSeconds) async {
     await _ensureInitialized();
     await _prefs!.setString(_keyToken, token);
-    final expiresAt = DateTime.now().millisecondsSinceEpoch + expiresInSeconds * 1000;
+    final expiresAt =
+        DateTime.now().millisecondsSinceEpoch + expiresInSeconds * 1000;
     await _prefs!.setString(_keyExpiresAt, expiresAt.toString());
   }
 
@@ -33,12 +34,21 @@ class SessionManager {
     if (token == null || expiresAtStr == null) return null;
 
     final expiresAt = int.tryParse(expiresAtStr);
-    if (expiresAt == null || DateTime.now().millisecondsSinceEpoch > expiresAt) {
+    if (expiresAt == null ||
+        DateTime.now().millisecondsSinceEpoch > expiresAt) {
       await clearSession();
       return null;
     }
 
     return token;
+  }
+
+  /// 세션 만료 시각(ms). 없으면 null
+  Future<int?> expiresAt() async {
+    await _ensureInitialized();
+    final expiresAtStr = _prefs!.getString(_keyExpiresAt);
+    if (expiresAtStr == null) return null;
+    return int.tryParse(expiresAtStr);
   }
 
   /// 세션 토큰 삭제
@@ -61,7 +71,8 @@ class _InMemorySessionManager extends SessionManager {
   @override
   Future<void> saveSession(String token, int expiresInSeconds) async {
     _token = token;
-    _expiresAt = DateTime.now().millisecondsSinceEpoch + expiresInSeconds * 1000;
+    _expiresAt =
+        DateTime.now().millisecondsSinceEpoch + expiresInSeconds * 1000;
   }
 
   @override
@@ -74,6 +85,9 @@ class _InMemorySessionManager extends SessionManager {
     }
     return _token;
   }
+
+  @override
+  Future<int?> expiresAt() async => _expiresAt;
 
   @override
   Future<void> clearSession() async {

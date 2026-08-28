@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../config/gist_chatbot_config.dart';
 
+/// 메시지 입력창 + 전송/중지 버튼 (웹 위젯과 동일: 로딩 중엔 중지 버튼으로 전환)
 class MessageInput extends StatefulWidget {
   const MessageInput({
     super.key,
     required this.onSend,
+    required this.onStop,
     required this.colors,
+    this.loading = false,
     this.placeholder = '메시지를 입력하세요',
-    this.maxLength = 2000,
-    this.enabled = true,
   });
 
   final void Function(String text) onSend;
+  final VoidCallback onStop;
   final GistChatbotColors colors;
+  final bool loading;
   final String placeholder;
-  final int maxLength;
-  final bool enabled;
 
   @override
   State<MessageInput> createState() => _MessageInputState();
@@ -47,7 +48,7 @@ class _MessageInputState extends State<MessageInput> {
 
   void _submit() {
     final text = _controller.text.trim();
-    if (text.isEmpty || !widget.enabled) return;
+    if (text.isEmpty || widget.loading) return;
     widget.onSend(text);
     _controller.clear();
   }
@@ -55,83 +56,107 @@ class _MessageInputState extends State<MessageInput> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
-    final canSend = _hasText && widget.enabled;
+    final canSend = _hasText && !widget.loading;
 
     return Container(
-      // 입력창/버튼만 딱 남기도록 세로 여백을 최소화합니다.
-      padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: colors.background,
         border: Border(top: BorderSide(color: colors.border)),
       ),
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                enabled: widget.enabled,
-                maxLines: 4,
-                minLines: 1,
-                maxLength: widget.maxLength,
-                style: TextStyle(fontSize: 14, color: colors.text),
-                decoration: InputDecoration(
-                  hintText: widget.placeholder,
-                  hintStyle: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 14,
-                  ),
-                  filled: true,
-                  fillColor: colors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: colors.primary, width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  counterText: '',
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              maxLines: 4,
+              minLines: 1,
+              style: TextStyle(fontSize: 14, color: colors.text),
+              decoration: InputDecoration(
+                hintText: widget.placeholder,
+                hintStyle: TextStyle(color: colors.textSecondary, fontSize: 14),
+                isDense: true,
+                filled: true,
+                fillColor: colors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: colors.border),
                 ),
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _submit(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 44,
-              height: 44,
-              child: Material(
-                color: canSend
-                    ? colors.primary
-                    : colors.primary.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(22),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(22),
-                  onTap: canSend ? _submit : null,
-                  child: const Center(
-                    child: Icon(
-                      Icons.arrow_upward_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
                 ),
               ),
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _submit(),
             ),
-          ],
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: widget.loading
+                ? _RoundIconButton(
+                    color: colors.primary,
+                    icon: Icons.stop_rounded,
+                    iconSize: 20,
+                    tooltip: '응답 중지',
+                    onTap: widget.onStop,
+                  )
+                : _RoundIconButton(
+                    color: canSend
+                        ? colors.button
+                        : colors.button.withValues(alpha: 0.5),
+                    icon: Icons.arrow_upward_rounded,
+                    iconSize: 24,
+                    tooltip: '전송',
+                    onTap: canSend ? _submit : null,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({
+    required this.color,
+    required this.icon,
+    required this.iconSize,
+    required this.tooltip,
+    this.onTap,
+  });
+
+  final Color color;
+  final IconData icon;
+  final double iconSize;
+  final String tooltip;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: color,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Center(
+            child: Icon(icon, color: Colors.white, size: iconSize),
+          ),
         ),
       ),
     );

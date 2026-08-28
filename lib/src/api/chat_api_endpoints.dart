@@ -8,12 +8,14 @@ class ChatApiEndpoints {
   /// 대화 내역 조회: GET /api/v1/widget/messages
   static const String getMessages = 'v1/widget/messages';
 
-  /// 메시지 저장 (선택): POST /api/v1/widget/messages
-  static const String postMessage = 'v1/widget/messages';
-
   /// 챗봇 스트리밍: POST /api/v1/widget/messages/chat/stream
   static const String sendChatStream = 'v1/widget/messages/chat/stream';
 
-  /// 리소스 조회: GET /api/v1/widget/messages/resources/{encodedPath}
-  static const String resourcesPrefix = 'v1/widget/messages/resources/';
+  /// 답변 재생성 스트리밍: POST /api/v1/widget/messages/{id}/regenerate/stream
+  static String regenerateStream(String messageId) =>
+      'v1/widget/messages/${Uri.encodeComponent(messageId)}/regenerate/stream';
+
+  /// 답변 피드백: PUT /api/v1/widget/messages/{id}/feedback
+  static String feedback(String messageId) =>
+      'v1/widget/messages/${Uri.encodeComponent(messageId)}/feedback';
 }
