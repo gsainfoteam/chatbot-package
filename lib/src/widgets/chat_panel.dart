@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../config/gist_chatbot_config.dart';
@@ -37,14 +35,11 @@ class ChatPanel extends StatelessWidget {
       type: MaterialType.transparency,
       child: Stack(
         children: [
-          // 배경 dim + blur, 탭 시 닫기
+          // 배경 dim (탭 시 닫기) - 라우트 전환과 함께 fade in/out
           Positioned.fill(
             child: GestureDetector(
               onTap: onClose,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                child: Container(color: Colors.black26),
-              ),
+              child: const ColoredBox(color: Colors.black26),
             ),
           ),
           SafeArea(

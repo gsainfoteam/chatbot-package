@@ -68,10 +68,11 @@ class GistChatbot {
         );
       },
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        // 웹 위젯과 동일: opacity + translateY(8px) + scale(0.98)
+        // 열릴 때: fade + 살짝 위로 + scale(0.98→1), 닫힐 때 역재생
         final curved = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOut,
+          reverseCurve: Curves.easeIn,
         );
         return FadeTransition(
           opacity: curved,
@@ -101,7 +102,13 @@ class GistChatbot {
   void close() {
     final route = _route;
     if (route == null) return;
-    _navigator?.removeRoute(route);
+    if (route.isCurrent) {
+      // pop이어야 닫힘 전환(fade out)이 재생된다
+      _navigator?.pop();
+    } else {
+      // 위에 다른 라우트가 쌓여 있으면 전환 없이 제거
+      _navigator?.removeRoute(route);
+    }
     _route = null;
     _navigator = null;
   }
