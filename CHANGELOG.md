@@ -1,32 +1,32 @@
+## 0.1.1
+
+- Upgrade package_info_plus to ^10.2.1 (also restores WASM compatibility)
+- English package documentation; Korean version moved to doc/README.ko.md
+
 ## 0.1.0
 
-* 웹 위젯(chatbot-fe)과 동일한 디자인/UX로 전면 재작성
-* 트리거 재설계: 고정 플로팅 버튼 제거, `GistChatbot.open(context)` 메소드 제공
-* 자주 묻는 질문: 웹과 동일한 라벨/실제 질문문 분리
-* 로딩 단계 문구 + shimmer/thinking dots 애니메이션
-* 스트리밍 중지 버튼 (부분 응답 유지)
-* 답변 피드백(GOOD/BAD) 및 BAD 시 1회 재생성
-* 429 안내 배너 + 재시도 카운트다운
-* 출처 배지/이미지 → 외부 브라우저 열기
-* 운영 API/리소스 센터 URL 내장: 필수 설정은 widgetKey 하나 (dev 환경만 URL 재정의)
-* 마크다운 렌더러를 gpt_markdown으로 교체
+- Full rewrite to mirror the web widget's (chatbot-fe) design and UX
+- New trigger API: the fixed floating button is gone; apps call `GistChatbot.open(context)` from their own widgets
+- Frequent questions with separate card labels and full question texts, as on the web
+- Staged loading copy with shimmer text and thinking-dots animation
+- Stop button while streaming; partial answers are kept
+- Answer feedback (GOOD/BAD) with a one-time regeneration on BAD
+- Rate-limit (429) banner with a live retry countdown
+- Source badges/images open in the external browser (resourceCenterUrl)
+- Markdown rendering switched to gpt_markdown
+- Widget key validation with clear error messages for setup mistakes
+  (invalid key, unregistered app id)
+- Service URLs built in: widgetKey is the only required configuration
 
 ## 0.0.2
 
-* 앱 전용 API 명세 반영
-* 세션 발급: clientType=app, appId (pageUrl 제거)
-* appId: Config에 선택 지정, 미지정 시 package_info_plus로 자동 획득
-* 대화 내역 조회 (GET /messages, 페이징)
-* 리소스 조회 (GET /messages/resources/{path})
-* 세션당 질문 5회 제한 시 429 안내 메시지
-* 에러 응답 JSON 파싱 (message 필드)
+- App-specific API spec: session issuing with clientType=app and appId
+  (pageUrl removed); appId resolved via package_info_plus when omitted
+- Message history fetching with pagination and resource fetching
+- Rate-limit (429) notice; error responses parsed from the message field
 
 ## 0.0.1
 
-* 초기 릴리스
-* 챗봇 화면 위젯 (GistChatbotLauncher)
-* 메시지 입력창, 메시지 리스트
-* 백엔드 API 호출 (세션 생성, 채팅 스트리밍)
-* 대화 세션 유지
-* 로딩/에러/재시도 처리
-* 토큰 주입 지원
+- Initial release: chat screen widget, message input/list, backend API
+  calls (session, chat streaming), session persistence, loading/error
+  handling, token injection

@@ -1,6 +1,6 @@
 name: gist_chatbot_flutter
-description: "GIST 챗봇 Flutter 위젯 - 앱 하단 오버레이 형태의 챗봇 패키지"
-version: 0.1.0
+description: "GIST chatbot widget for Flutter apps - a bottom-sheet chat panel with SSE streaming, markdown answers, and answer feedback."
+version: 0.1.1
 homepage: https://github.com/gsainfoteam/chatbot-package
 repository: https://github.com/gsainfoteam/chatbot-package
 issue_tracker: https://github.com/gsainfoteam/chatbot-package/issues
@@ -13,11 +13,11 @@ topics:
   - sse
 
 screenshots:
-  - description: 챗봇 패널 초기 화면 - 웰컴 메시지와 자주 묻는 질문
+  - description: Welcome screen with frequent questions
     path: screenshots/welcome.png
-  - description: 마크다운으로 렌더링되는 스트리밍 답변
+  - description: Streaming answer rendered as markdown
     path: screenshots/conversation.png
-  - description: 답변 출처 배지와 피드백 버튼
+  - description: Source badges and feedback buttons
     path: screenshots/sources.png
 
 environment:
@@ -29,7 +29,7 @@ dependencies:
     sdk: flutter
   http: ^1.2.0
   shared_preferences: ^2.2.0
-  package_info_plus: ^8.0.0
+  package_info_plus: ^10.2.1
   flutter_svg: ^2.0.10+1
   gpt_markdown: ^1.1.8
   url_launcher: ^6.3.0
