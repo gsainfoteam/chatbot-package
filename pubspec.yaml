@@ -3,6 +3,22 @@ description: "GIST 챗봇 Flutter 위젯 - 앱 하단 오버레이 형태의 챗
 version: 0.1.0
 homepage: https://github.com/gsainfoteam/chatbot-package
 repository: https://github.com/gsainfoteam/chatbot-package
+issue_tracker: https://github.com/gsainfoteam/chatbot-package/issues
+
+topics:
+  - chatbot
+  - chat
+  - ai
+  - widget
+  - sse
+
+screenshots:
+  - description: 챗봇 패널 초기 화면 - 웰컴 메시지와 자주 묻는 질문
+    path: screenshots/welcome.png
+  - description: 마크다운으로 렌더링되는 스트리밍 답변
+    path: screenshots/conversation.png
+  - description: 답변 출처 배지와 피드백 버튼
+    path: screenshots/sources.png
 
 environment:
   sdk: ^3.8.1
