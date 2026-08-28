@@ -41,7 +41,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final _chatbot = GistChatbot(
     config: const GistChatbotConfig(
-      apiBaseUrl: 'https://api.example.com/api',
       widgetKey: 'wk_live_xxx',
       // appId 생략 시 package_info_plus로 자동 획득 (Android applicationId / iOS Bundle ID)
     ),
@@ -72,15 +71,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
 ## 설정 (GistChatbotConfig)
 
-| 필드                | 필수 | 설명                                                        |
-| ------------------- | ---- | ----------------------------------------------------------- |
-| `apiBaseUrl`        | O    | 백엔드 API 베이스 URL (예: `https://api.example.com/api`)   |
-| `widgetKey`         | O    | 위젯 키 (대시보드에서 발급, 예: `wk_live_xxx`)              |
-| `resourceCenterUrl` | X    | 출처 리소스 베이스 URL. 지정 시 `{url}/resource/{path}`로 열림 |
-| `appId`             | X    | 앱 식별자. null이면 package_info_plus로 자동 획득           |
-| `accessToken`       | X    | OAuth 등 인증 토큰 (선택)                                   |
-| `reportUrl`         | X    | 헤더 신고 버튼 URL (기본: cs.gistory.me)                    |
-| `colors`            | X    | 색상 커스터마이징 (웹 위젯 CSS 변수와 동일한 팔레트)        |
+| 필드                | 필수 | 설명                                                             |
+| ------------------- | ---- | ---------------------------------------------------------------- |
+| `widgetKey`         | O    | 위젯 키 (대시보드에서 발급, 예: `wk_live_xxx`)                   |
+| `apiBaseUrl`        | X    | 백엔드 API 베이스 URL. 기본값은 운영 서버 (dev 환경에서만 지정)  |
+| `resourceCenterUrl` | X    | 출처 리소스 베이스 URL. 기본값은 운영 리소스 센터                |
+| `appId`             | X    | 앱 식별자. null이면 package_info_plus로 자동 획득                |
+| `accessToken`       | X    | OAuth 등 인증 토큰 (선택)                                        |
+| `reportUrl`         | X    | 헤더 신고 버튼 URL (기본: cs.gistory.me)                         |
+| `colors`            | X    | 색상 커스터마이징 (웹 위젯 CSS 변수와 동일한 팔레트)             |
+
+위젯 키만 넣으면 됩니다. 앱의 번들 ID(iOS) / applicationId(Android)가 챗봇 대시보드에
+등록되어 있어야 하며, 미등록 시 채팅 화면에 안내 문구가 표시됩니다.
 
 ## API (앱 전용 명세)
 

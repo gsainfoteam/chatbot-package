@@ -29,14 +29,22 @@ void main() {
   });
 
   group('GistChatbotConfig', () {
-    test('creates config with required fields', () {
-      const config = GistChatbotConfig(
-        apiBaseUrl: 'https://api.example.com',
-        widgetKey: 'test-key',
-      );
-      expect(config.apiBaseUrl, 'https://api.example.com');
+    test('only the widget key is required; service urls default to prod', () {
+      const config = GistChatbotConfig(widgetKey: 'test-key');
       expect(config.widgetKey, 'test-key');
+      expect(config.apiBaseUrl, kDefaultApiBaseUrl);
+      expect(config.resourceCenterUrl, kDefaultResourceCenterUrl);
       expect(config.accessToken, isNull);
+    });
+
+    test('service urls can be overridden for dev environments', () {
+      const config = GistChatbotConfig(
+        widgetKey: 'test-key',
+        apiBaseUrl: 'https://dev.example.com/api',
+        resourceCenterUrl: 'https://dev-resource.example.com',
+      );
+      expect(config.apiBaseUrl, 'https://dev.example.com/api');
+      expect(config.resourceCenterUrl, 'https://dev-resource.example.com');
     });
   });
 }

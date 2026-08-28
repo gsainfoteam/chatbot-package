@@ -49,24 +49,33 @@ class GistChatbotColors {
   }
 }
 
+/// GIST 챗봇 운영 API 베이스 URL
+const String kDefaultApiBaseUrl = 'https://api.chatbot.gistory.me/api';
+
+/// GIST 챗봇 운영 리소스 센터 URL
+const String kDefaultResourceCenterUrl =
+    'https://resource-center-573707418062.asia-northeast3.run.app';
+
 /// GIST 챗봇 위젯 설정
 class GistChatbotConfig {
   const GistChatbotConfig({
-    required this.apiBaseUrl,
     required this.widgetKey,
-    this.resourceCenterUrl,
+    this.apiBaseUrl = kDefaultApiBaseUrl,
+    this.resourceCenterUrl = kDefaultResourceCenterUrl,
     this.appId,
     this.accessToken,
     this.reportUrl = 'https://cs.gistory.me?service=chatbot',
     this.colors = const GistChatbotColors(),
   });
 
-  final String apiBaseUrl;
   final String widgetKey;
 
-  /// 출처 리소스(PDF/이미지) 베이스 URL.
-  /// 예: `https://resource.example.com` → `{url}/resource/{path}` 로 열림.
-  /// null이면 출처의 원본 url을 그대로 사용합니다.
+  /// 백엔드 API 베이스 URL. 기본값은 운영 서버이며,
+  /// dev/스테이징 환경을 쓸 때만 지정한다.
+  final String apiBaseUrl;
+
+  /// 출처 리소스(PDF/이미지) 베이스 URL. `{url}/resource/{path}` 로 열림.
+  /// 기본값은 운영 리소스 센터. null이면 출처의 원본 url을 그대로 사용한다.
   final String? resourceCenterUrl;
 
   /// 앱 식별자. null이면 package_info_plus로 자동 획득.

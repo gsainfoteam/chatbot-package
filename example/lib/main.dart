@@ -33,10 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // 앱이 GistChatbot 인스턴스를 만들고, 원하는 위젯에서 open()을 호출한다.
   final _chatbot = GistChatbot(
     config: const GistChatbotConfig(
-      apiBaseUrl: 'https://api.chatbot.gistory.me/api',
       widgetKey: 'wk_live_FtWomgoOoWemRetpLDlGZwNx',
-      resourceCenterUrl:
-          'https://resource-center-573707418062.asia-northeast3.run.app',
     ),
   );
 
