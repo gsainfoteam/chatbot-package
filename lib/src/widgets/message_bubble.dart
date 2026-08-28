@@ -80,22 +80,23 @@ class _AssistantMarkdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 헤딩 위계: 웹(Streamdown/prose)처럼 굵은 웨이트로 본문과 구분
-    TextStyle heading(double size, FontWeight weight) => TextStyle(
+    // 헤딩 위계: 웹 위젯(Streamdown)과 동일
+    // h1 text-3xl ~ h6 text-sm, 모두 font-semibold
+    TextStyle heading(double size) => TextStyle(
       color: colors.text,
       fontSize: size,
-      fontWeight: weight,
-      height: 1.35,
+      fontWeight: FontWeight.w600,
+      height: 1.3,
     );
     return GptMarkdownTheme(
       gptThemeData: GptMarkdownThemeData(
         brightness: Brightness.light,
-        h1: heading(20, FontWeight.w700),
-        h2: heading(18, FontWeight.w700),
-        h3: heading(16, FontWeight.w700),
-        h4: heading(15, FontWeight.w600),
-        h5: heading(14, FontWeight.w600),
-        h6: heading(14, FontWeight.w600),
+        h1: heading(30),
+        h2: heading(24),
+        h3: heading(20),
+        h4: heading(18),
+        h5: heading(16),
+        h6: heading(14),
         linkColor: colors.primary,
         linkHoverColor: colors.primary,
         hrLineColor: colors.border,
