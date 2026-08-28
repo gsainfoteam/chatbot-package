@@ -1,0 +1,15 @@
+name: gist_chatbot_flutter_example
+description: GIST 챗봇 Flutter 패키지 예시 앱
+version: 0.0.1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  gist_chatbot_flutter:
+    path: ../
+
+flutter:
+  uses-material-design: true
