@@ -1,7 +1,8 @@
 name: gist_chatbot_flutter
 description: "GIST 챗봇 Flutter 위젯 - 앱 하단 오버레이 형태의 챗봇 패키지"
 version: 0.0.2
-homepage:
+homepage: https://github.com/gsainfoteam/chatbot-package
+repository: https://github.com/gsainfoteam/chatbot-package
 
 environment:
   sdk: ^3.8.1

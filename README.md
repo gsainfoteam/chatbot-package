@@ -18,7 +18,7 @@ GIST 챗봇 Flutter 위젯 - 앱 하단 오버레이 형태의 챗봇 패키지
 
 ```yaml
 dependencies:
-  gist_chatbot_flutter: ^0.0.1
+  gist_chatbot_flutter: ^0.0.2
 ```
 
 ## 사용법
@@ -97,5 +97,3 @@ GistChatbotLauncher(
 ## 라이선스
 
 MIT
-
-기숙사 납입금 언제 내?
