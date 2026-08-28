@@ -21,7 +21,22 @@ import 'widgets/chat_panel.dart';
 /// onPressed: () => chatbot.open(context)
 /// ```
 class GistChatbot {
-  GistChatbot({required this.config});
+  GistChatbot({required this.config}) {
+    if (config.widgetKey.trim().isEmpty) {
+      throw ArgumentError.value(
+        config.widgetKey,
+        'config.widgetKey',
+        '위젯 키가 비어 있습니다. 대시보드에서 발급한 위젯 키(wk_...)를 전달해주세요.',
+      );
+    }
+    if (config.apiBaseUrl.trim().isEmpty) {
+      throw ArgumentError.value(
+        config.apiBaseUrl,
+        'config.apiBaseUrl',
+        'API 베이스 URL이 비어 있습니다.',
+      );
+    }
+  }
 
   final GistChatbotConfig config;
 

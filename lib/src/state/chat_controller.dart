@@ -111,6 +111,8 @@ class ChatController extends ChangeNotifier {
     }
   }
 
+  String? _resolvedAppId;
+
   Future<String> _ensureSession() async {
     var token = await _sessionManager.loadSession();
     if (token != null) {
@@ -118,6 +120,7 @@ class ChatController extends ChangeNotifier {
       return token;
     }
     final appId = await resolveAppId(_config.appId);
+    _resolvedAppId = appId;
     final response = await _apiClient.createSession(
       api.CreateSessionRequest(widgetKey: _config.widgetKey, appId: appId),
     );
@@ -314,6 +317,25 @@ class ChatController extends ChangeNotifier {
   void _handleStreamError(Object e, String assistantId) {
     if (e is StreamCancelledException) return;
 
+    // 위젯 키/앱 등록 설정 오류: 재시도해도 해결되지 않으므로 명확히 안내
+    if (e is ChatApiException && _isConfigError(e)) {
+      _replaceWithError(assistantId, _configErrorMessage(e));
+      debugPrint(
+        'GistChatbot: session rejected (status ${e.statusCode}) - '
+        '${e.message} (widgetKey: ${_config.widgetKey}, '
+        'appId: ${_resolvedAppId ?? _config.appId ?? 'auto'})',
+      );
+      return;
+    }
+
+    // 세션이 서버에서 무효화된 경우: 저장된 토큰을 버려 다음 전송에서 재발급
+    if (e is ChatApiException && e.statusCode == 401) {
+      _apiClient.setSessionToken(null);
+      _sessionManager.clearSession();
+      _replaceWithError(assistantId, '세션이 만료되었습니다. 다시 시도해주세요.');
+      return;
+    }
+
     if (e is ChatApiException && e.isRateLimit) {
       // 429: placeholder 제거 + 배너 카운트다운 (재시도 가능 시각 = 세션 만료)
       _messages.removeWhere((m) => m.id == assistantId);
@@ -344,6 +366,32 @@ class ChatController extends ChangeNotifier {
       );
     }
     debugPrint('Failed to send chat message: $e');
+  }
+
+  bool _isConfigError(ChatApiException e) =>
+      e.statusCode == 400 || e.statusCode == 403 || e.statusCode == 404;
+
+  String _configErrorMessage(ChatApiException e) {
+    switch (e.statusCode) {
+      case 404:
+        return '위젯 키가 유효하지 않습니다. 앱 설정을 확인해주세요.';
+      case 403:
+        return '이 앱은 챗봇 서비스에 등록되어 있지 않습니다. 관리자에게 문의해주세요.';
+      default:
+        return '챗봇 설정이 올바르지 않습니다. 앱 설정을 확인해주세요.';
+    }
+  }
+
+  /// placeholder 답변을 에러 안내 문구로 교체
+  void _replaceWithError(String assistantId, String message) {
+    final idx = _indexOf(assistantId);
+    if (idx >= 0) {
+      _messages[idx] = _messages[idx].copyWith(text: message);
+    } else {
+      _messages.add(
+        ChatMessage(id: _uid(), role: MessageRole.assistant, text: message),
+      );
+    }
   }
 
   /// 429 카운트다운 종료 시 배너 해제

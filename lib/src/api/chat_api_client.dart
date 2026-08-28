@@ -37,8 +37,10 @@ String _parseErrorBody(String body, int statusCode) {
   if (body.isEmpty) return 'Request failed ($statusCode)';
   try {
     final json = jsonDecode(body) as Map<String, dynamic>;
-    final msg = json['message'] as String?;
-    if (msg != null && msg.isNotEmpty) return msg;
+    final msg = json['message'];
+    // NestJS 검증 에러는 message가 문자열 배열로 온다
+    if (msg is List) return msg.join(', ');
+    if (msg is String && msg.isNotEmpty) return msg;
   } catch (_) {}
   return body;
 }

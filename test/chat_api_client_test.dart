@@ -22,6 +22,50 @@ void main() {
       expect(response.expiresIn, 3600);
     });
 
+    test('createSession surfaces the server message for a bad key', () async {
+      final client = ChatApiClient(
+        baseUrl: 'https://api.example.com',
+        client: _MockClient(
+          (_) async => http.Response(
+            '{"message":"Widget key not found","error":"Not Found","statusCode":404}',
+            404,
+          ),
+        ),
+      );
+
+      try {
+        await client.createSession(
+          const CreateSessionRequest(widgetKey: 'wk_bad', appId: 'com.a.b'),
+        );
+        fail('should throw');
+      } on ChatApiException catch (e) {
+        expect(e.statusCode, 404);
+        expect(e.message, 'Widget key not found');
+      }
+    });
+
+    test('createSession parses array validation messages', () async {
+      final client = ChatApiClient(
+        baseUrl: 'https://api.example.com',
+        client: _MockClient(
+          (_) async => http.Response(
+            '{"statusCode":400,"message":["widgetKey should not be empty"],"error":"Bad Request"}',
+            400,
+          ),
+        ),
+      );
+
+      try {
+        await client.createSession(
+          const CreateSessionRequest(widgetKey: '', appId: 'com.a.b'),
+        );
+        fail('should throw');
+      } on ChatApiException catch (e) {
+        expect(e.statusCode, 400);
+        expect(e.message, 'widgetKey should not be empty');
+      }
+    });
+
     test('createSession throws on error', () async {
       final client = ChatApiClient(
         baseUrl: 'https://api.example.com',
