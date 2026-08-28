@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/gist_chatbot_config.dart';
+import 'pressable.dart';
 
 /// 메시지 입력창 + 전송/중지 버튼 (웹 위젯과 동일: 로딩 중엔 중지 버튼으로 전환)
 class MessageInput extends StatefulWidget {
@@ -148,12 +149,11 @@ class _RoundIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: Material(
-        color: color,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
+      child: Pressable(
+        onTap: onTap,
+        pressedScale: 0.92,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           child: Center(
             child: Icon(icon, color: Colors.white, size: iconSize),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/gist_chatbot_config.dart';
+import 'pressable.dart';
 
 /// 패널 헤더: 로고 + 타이틀 + Beta + Powered by / 신고 · 안내 · 닫기 (웹 위젯과 동일)
 class ChatHeader extends StatelessWidget {
@@ -44,6 +45,8 @@ class ChatHeader extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.3,
                           color: colors.text,
+                          height: 1.2,
+                          leadingDistribution: TextLeadingDistribution.even,
                         ),
                       ),
                     ),
@@ -64,9 +67,14 @@ class ChatHeader extends StatelessWidget {
                         'Beta',
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: colors.primary,
-                          height: 1,
+                          height: 1.1,
+                          leadingDistribution: TextLeadingDistribution.even,
+                        ),
+                        textHeightBehavior: const TextHeightBehavior(
+                          applyHeightToFirstAscent: true,
+                          applyHeightToLastDescent: true,
                         ),
                       ),
                     ),
@@ -79,9 +87,10 @@ class ChatHeader extends StatelessWidget {
                       'Powered by',
                       style: TextStyle(
                         fontSize: 10,
-                        height: 1,
+                        height: 1.1,
                         letterSpacing: -0.2,
                         color: colors.textSecondary,
+                        leadingDistribution: TextLeadingDistribution.even,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -139,9 +148,9 @@ class _HeaderIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+      child: Pressable(
         onTap: onTap,
+        pressedScale: 0.92,
         child: SizedBox(
           width: 32,
           height: 32,
@@ -164,6 +173,8 @@ class _DisclaimerButton extends StatelessWidget {
       triggerMode: TooltipTriggerMode.tap,
       showDuration: const Duration(seconds: 3),
       preferBelow: true,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Color.alphaBlend(
           colors.primary.withValues(alpha: 0.08),

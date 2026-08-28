@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/gist_chatbot_config.dart';
 import '../state/chat_message.dart';
 import 'loading_shimmer.dart';
+import 'pressable.dart';
 
 /// 메시지 말풍선 (웹 위젯과 동일: user는 primary 10%/25%, assistant는 흰 배경+테두리)
 class MessageBubble extends StatelessWidget {
@@ -79,25 +80,49 @@ class _AssistantMarkdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: TextStyle(color: colors.text, fontSize: 14, height: 1.4),
-      child: GptMarkdown(
-        text,
+    // 헤딩 위계: 웹(Streamdown/prose)처럼 굵은 웨이트로 본문과 구분
+    TextStyle heading(double size, FontWeight weight) => TextStyle(
+      color: colors.text,
+      fontSize: size,
+      fontWeight: weight,
+      height: 1.35,
+    );
+    return GptMarkdownTheme(
+      gptThemeData: GptMarkdownThemeData(
+        brightness: Brightness.light,
+        h1: heading(20, FontWeight.w700),
+        h2: heading(18, FontWeight.w700),
+        h3: heading(16, FontWeight.w700),
+        h4: heading(15, FontWeight.w600),
+        h5: heading(14, FontWeight.w600),
+        h6: heading(14, FontWeight.w600),
+        linkColor: colors.primary,
+        linkHoverColor: colors.primary,
+        hrLineColor: colors.border,
+        autoAddDividerLineAfterH1: false,
+      ),
+      child: DefaultTextStyle(
         style: TextStyle(color: colors.text, fontSize: 14, height: 1.4),
-        linkBuilder: (context, span, url, style) {
-          return GestureDetector(
-            onTap: () =>
-                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-            child: Text.rich(
-              span,
-              style: style.copyWith(
-                color: colors.primary,
-                decoration: TextDecoration.underline,
-                decorationColor: colors.primary,
+        child: GptMarkdown(
+          text,
+          style: TextStyle(color: colors.text, fontSize: 14, height: 1.4),
+          linkBuilder: (context, span, url, style) {
+            return GestureDetector(
+              onTap: () => launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalApplication,
               ),
-            ),
-          );
-        },
+              child: Text.rich(
+                span,
+                style: style.copyWith(
+                  color: colors.primary,
+                  decoration: TextDecoration.underline,
+                  decorationColor: colors.primary,
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -147,8 +172,7 @@ class _SourceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(6),
+    return Pressable(
       onTap: () => launchUrl(
         Uri.parse(source.url),
         mode: LaunchMode.externalApplication,
@@ -174,6 +198,8 @@ class _SourceBadge extends StatelessWidget {
                   color: colors.text,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  height: 1.2,
+                  leadingDistribution: TextLeadingDistribution.even,
                 ),
               ),
             ),

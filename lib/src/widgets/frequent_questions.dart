@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/gist_chatbot_config.dart';
+import 'pressable.dart';
 
 /// 자주 묻는 질문 (웹 위젯의 frequentQuestions.ts와 동일)
 class FrequentQuestion {
@@ -79,6 +80,8 @@ class FrequentQuestionsSection extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
                 color: colors.textSecondary,
+                height: 1.2,
+                leadingDistribution: TextLeadingDistribution.even,
               ),
             ),
           ),
@@ -122,36 +125,34 @@ class _QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: colors.assistantMessageBg,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.border),
-          ),
-          child: Row(
-            children: [
-              Text(item.icon, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: colors.text,
-                  ),
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.assistantMessageBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Text(item.icon, style: const TextStyle(fontSize: 16, height: 1.2)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.text,
+                  height: 1.2,
+                  leadingDistribution: TextLeadingDistribution.even,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/gist_chatbot_config.dart';
 import '../state/chat_message.dart';
+import 'pressable.dart';
 
 /// 답변 피드백 행: 👍 👎 + 안내 문구 (웹 위젯과 동일)
 class FeedbackRow extends StatelessWidget {
@@ -82,22 +83,22 @@ class _FeedbackButton extends StatelessWidget {
       message: label,
       child: Opacity(
         opacity: disabled ? 0.4 : 1,
-        child: Material(
-          color: selected
-              ? colors.primary.withValues(alpha: 0.10)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: disabled ? null : onTap,
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: Icon(
-                icon,
-                size: 14,
-                color: selected ? colors.primary : colors.textSecondary,
-              ),
+        child: Pressable(
+          onTap: disabled ? null : onTap,
+          pressedScale: 0.88,
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: selected
+                  ? colors.primary.withValues(alpha: 0.10)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(
+              icon,
+              size: 14,
+              color: selected ? colors.primary : colors.textSecondary,
             ),
           ),
         ),

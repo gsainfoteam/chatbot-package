@@ -30,6 +30,11 @@ class _MessageListState extends State<MessageList> {
   void initState() {
     super.initState();
     widget.controller.addListener(_onUpdate);
+    // 대화가 이미 있을 때 패널을 다시 열면 맨 아래에서 시작
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
   }
 
   @override
