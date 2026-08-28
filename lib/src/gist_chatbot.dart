@@ -67,28 +67,6 @@ class GistChatbot {
           onClose: close,
         );
       },
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        // 열릴 때: fade + 살짝 위로 + scale(0.98→1), 닫힐 때 역재생
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOut,
-          reverseCurve: Curves.easeIn,
-        );
-        return FadeTransition(
-          opacity: curved,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.01),
-              end: Offset.zero,
-            ).animate(curved),
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
-              alignment: Alignment.bottomCenter,
-              child: child,
-            ),
-          ),
-        );
-      },
     );
     _route = route;
 
