@@ -35,6 +35,8 @@ class _MyHomePageState extends State<MyHomePage> {
     config: const GistChatbotConfig(
       apiBaseUrl: 'https://api.chatbot.gistory.me/api',
       widgetKey: 'wk_live_FtWomgoOoWemRetpLDlGZwNx',
+      resourceCenterUrl:
+          'https://resource-center-573707418062.asia-northeast3.run.app',
     ),
   );
 
